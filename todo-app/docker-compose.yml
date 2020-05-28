@@ -1,0 +1,39 @@
+version: "3"
+services:
+  db:
+    image: mongo:4.0
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+      # In most cases, we would not want our database contents to be lost every time the
+      #  database service is brought down. A common way to persist our DB data is to mount a named Docker volume.
+  backend:
+    build: 
+      context: ./backend
+    depends_on:
+      - db  
+    volumes:
+      - ./backend:/usr/app
+      - /usr/app/node_modules
+    environment:  
+      - MONGO_URL=mongodb://db:27017/todos
+      - APP_PORT=80
+    ports: ['80:80'] 
+# Most applications use environment variables for initialisation and startup
+#. For example, we can supply the environment variables POSTGRES_USER and POSTGRES_DB to define the default superuser 
+# and database of the database service. These variables can be defined in the compose file like so:
+  frontend:
+    build:
+      context: ./frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - '8080:8080'
+    environment:  
+      - BACKEND_URL=http://localhost/todos
+
+
+volumes:
+  mongodb_data_container:
